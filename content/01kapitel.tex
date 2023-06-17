@@ -1,0 +1,63 @@
+%!TEX root = ../dokumentation.tex
+
+\chapter{Einleitung}
+% Erste Erwähnung eines Akronyms wird als Fußnote angezeigt. Jede weitere wird
+% nur verlinkt: \acf{AGPL}. \cite{fsf:2007}
+
+% %Verweise auf das Glossar: \gls{Glossareintrag}, \glspl{Glossareintrag}
+
+% Nur erwähnte Literaturverweise werden auch im Literaturverzeichnis gedruckt:
+% \cite{baumgartner:2002}, \cite{dreyfus:1980}
+
+% Meine erste Fußnote\footnote{Ich bin eine Fußnote}
+
+Diese Projektarbeit wurde im Rahmen des dualen Informatikstudiums an der Berufsakademie Sachsen -- Staatliche Studienakademie Leipzig während der zweiten Praxisphase im Zeitraum von drei Monaten am \acfi{DBFZ} in Leipzig durchgeführt und dokumentiert.
+
+\begin{wrapfigure}{l}{.45\textwidth}
+\centering
+\includegraphics[height=.35\textwidth]{logo_DFBZ_rgb.jpg}
+\vspace{-10pt}
+\caption{Logo des DBFZ}
+\end{wrapfigure}
+
+Das \ac{DBFZ} \cite{dbfzweb} ist eine Forschungseinrichtung im Besitz der Bundesrepublik Deutschland.
+Verantwortlich ist das \ac{BMEL}.
+Zweck der gemeinnützigen Gesellschaft ist es, \glqq anwendungsorientierte Forschung und Entwicklung im Bereich der energetischen und integrierten stofflichen Nutzung nachwachsender Rohstoffe in der Bioökonomie unter besonderer Berücksichtigung innovativer Techniken, der wirtschaftlichen Auswirkungen und der Umweltbelange\grqq{} zu betreiben \cite{dbfzwissauf}.
+Hierzu unterhält das DBFZ unter anderem ein Biogaslabor, eine Forschungsbiogasanlage, ein Verbrennungstechnikum, ein Bioraffinerietechnikum, ein Analytiklabor und seit 2021 ein Datenlabor \cite{dbfzkonzept}.
+
+Ziel des neuen Datenlabors ist die \glqq Entwicklung, Pflege, Verbesserung und de[r] langfristige[..] Erhalt digitaler wissenschaftlicher Strukturen und Produkte\grqq{}. Dabei sollen die \glqq Forschenden am DBFZ mittels einer professionell ausgerichteten Digitalstruktur so in ihrer wissenschaftlichen Arbeit [unterstützt werden], dass sie die modernsten Methodiken der Informationstechnologie und Datenwissenschaft mühelos und gewinnbringend für ihre Forschungsprojekte einsetzen können.\grqq{} \cite[26]{dbfzyearreport}
+
+Die Konkretisierung dieser Programmatik zeichnet sich zur Zeit (Sommer 2022) dadurch aus, dass das halbduzendstarke Team Dienstleistungen sowohl nach innen wie auch nach außen anbietet:
+Einerseits wird Forschenden am DBFZ bei der sachgemäßen Einrichtung und Strukturierung ihrer Forschungsdatenbanken Hilfestellung geleistet.
+Zum anderen findet jedoch auch eine intensive Web-App- und \acs{API}-Entwicklungsarbeit statt, um die Forschungsergebnisse des DBFZ und dessen Projektpartner einer breiten Öffentlichkeit (Politik, Medien, Wissenschaft) zur Verfügung zu stellen und multimedial zugänglich zu machen.
+Die Fokuspunkte dieser Öffentlichkeitsarbeit sind dabei so breit gestreut wie das Forschungsfeld Biomasse an sich -- so bietet die App \textit{Forschungslandkarte} \cite{dbfzforschungsland} einen Überblick über die in Deutschland an Biomasse forschenden Institute und Unternehmen.
+Das \textit{Dashboard Getreidestroh} \cite{dbfzgetreidestoh} schlüsselt energetische Nutzbarkeit des Beiprodukts Stroh nach Regionen auf und das \textit{Dashboard Tierische Exkremente} \cite{dbfzexkremente} vermittelt Interessierten schnell, wo die meiste nutzbare Biomasse dieser Art produziert wird.
+
+\begin{wrapfigure}{}{.45\textwidth}
+\centering
+% \includegraphics[height=.35\textwidth]{datalab_logo.png}
+\def\svgwidth{175pt}
+\input{images/DataLab_Bars.pdf_tex} % bei svg: ganzer Path!
+\vspace{-5pt}
+\caption{Logo des Datenlabors}
+\end{wrapfigure}
+Die Teammitglieder wurden von der IT-Abteilung mit den am DBFZ üblichen Standardlaptops mit \texttt{Windows Pro 1809} ausgestattet.
+Bis zum Abschluss des in dieser Arbeit beschriebenen Projekts fand die Entwicklung dieser Apps auf diesem Betriebssystem statt, um danach auf einem Linux-Server gehostet zu werden. Diese Art der Softwareentwicklung traf auf verschiedenste Probleme.
+Kleine Fehler (wie ein versehentlich hardgecodeter Betriebssystempfad mit \texttt{C:\textbackslash}) können schnell behoben werden, aber fundamentalere Probleme bleiben bestehen.
+\textit{Supply-Chain}-Attacken, bei denen etwa ein in der Entwicklung eingebundenes \texttt{\acs{npm}}-Modul einen Malwareangriff auf das gesamte DBFZ-Netzwerk ermöglichen würde, sind eine zunehmende Gefahr \cite{Volkert2022Sep}.
+Auch hat sich herausgestellt, dass die Versionsverwaltung der jeweils benutzten Programmiersprache nicht funktionierte, beispielsweise arbeiteten bei einem Projekt mehrere Kollegen mit unterschiedlichen Python-Versionen.
+Zuletzt wurden die Vorteile eines unixoiden Betriebssystems für die Programmierarbeit vermisst, eine intuitive und selbstdokumentierende Shell, ein natürlich arbeitendes \texttt{Git}, vollintegriertes \texttt{\acs{SSH}} mit \texttt{\acs{SCP}}, einfache Installation von Software und Bibliotheken.
+
+Diese Punkte waren ausschlaggebend, das Entwicklungsteam mit einer Linux-Lösung auszustatten. Da es vonseiten der IT-Abteilung nicht vorgesehen war, auf den Laptops des Datenlabors Linux zu installieren (eine Integration in die Bürosysteme mit \texttt{Microsoft Office, Active Directory} und \texttt{Exchange} wäre dann nicht möglich gewesen) und da das eventuell verwendbare \texttt{Windows Subsystem for Linux 2} erst auf einer späteren Windowsversion zur Verfügung steht, wurde beschlossen, eine \textit{Virtualisierungslösung} für das Datenlabor einzuführen.
+
+% \lipsum[1-3]
+
+% \begin{wrapfigure}{}{.35\textwidth}
+% \centering
+% % \includegraphics[height=.35\textwidth]{datalab_logo.png}
+% \def\svgwidth{125pt}
+% \input{images/Festmist.pdf_tex} % bei svg: ganzer Path!
+% \vspace{-5pt}
+% \caption{Logo des Datenlabors}
+% \end{wrapfigure}
+% bla.\lipsum[1-3]

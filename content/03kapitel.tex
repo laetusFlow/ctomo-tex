@@ -1,0 +1,88 @@
+%!TEX root = ../dokumentation.tex
+
+\chapter{Grundsätzliche Infrastruktur}
+
+\section{Hardware}
+Das DBFZ setzt, wo möglich, auf \textit{on-premise-} statt auf \textit{cloud-hosting}.
+Dies hat zur Folge, dass in den beiden Serverräumen des DBFZ nicht nur die Netzwerkinfrastruktur gesteuert wird, sondern auch ausreichend Serverrechner bereitstehen und in der IT-Abteilung die Kompetenzen und Ressourcen zur Installation, Administration und Wartung der Serverinfrastruktur vorliegen.
+Dem Datenlabor wurde für die Entwicklungsinfrastruktur ein \texttt{Intel Xeon Gold 6326}-Cluster bereitgestellt. Dieses bietet auf 4 Hosts insgesamt 64 Prozessorkerne, 2 Terabyte Arbeitsspeicher und, über die VMware-eigene \texttt{vSAN}-Lösung zur Zeit 68 Terabyte Festspeicher.
+Das Datenlabor kann damit nicht nur in der Entwicklung auf Cloudlösungen vollständig verzichten, sondern seine Produkte auch selbst -- \textit{on-premise} -- hosten. 
+
+\section{Hypervisor}
+Der gewählte Hypervisor, der der Virtualisierungsinfrastruktur zugrunde liegt, ist der Typ-1-Hypervisor \texttt{VMware vSphere 7} (siehe Kapitel \ref{hypervisortypen}).
+Er lässt sich sowohl über eine proprietäre Konsole wie auch über die Websoftware \texttt{vSphere Client} steuern, die einen komfortablen Überblick über die gesamten VMs des Datenlabors bietet.
+Die Installation wurde von der IT-Abteilung vorgenommen und dem Datenlabor \glqq schlüsselfertig\grqq{} übergeben.
+
+Der \texttt{vSphere}-Kernel ist eine Eigenentwicklung von VMware, kein reduzierter Linux-Kernel -- auch wenn seine rudimentäre \glqq Shell\grqq{}, die \texttt{Host Console}, syntaktische Ähnlichkeiten zu üblichen Unix-Shells aufweist.
+Er regelt Zugriff auf CPU, Hauptspeicher und Festspeicher mithilfe eines Schedulers.
+Neben einem \acs{TCP}/IP-Stack und einem Storage Stack findet die Kernarbeit in \textit{Virtual Machine Support} -- der Kontrollinstanz, die CPU-Befehle einer VM an die Hardware weitergibt -- und im \textit{Hardware Interface Layer} -- jener Schicht, die Hardwareanfragen der VMs in physische Adressierung umsetzt -- statt \cite[56-57]{woehrmannvsphere2018}.
+
+Der Kernel führt CPU-Instruktionen nach Möglichkeit im \textit{Direct Execution Mode} aus, reicht die Befehle also direkt weiter und nutzt dabei die in modernen Prozessoren vorgesehene Virtualisierungsunterstützung.
+Ist eine Befehlsausführung im \textit{Direct Execution Mode} nicht möglich, etwa wenn ein Gast einen Ring-0-Befehl ausführen möchte, greift der Kernel auf \textit{Virtualization Mode} zurück, der die Befehle anpasst \cite[57-59]{woehrmannvsphere2018}.
+Da Anwendungen auf Gastsystemen in dieser Architektur üblicherweise direkt auf die CPU zugreifen können, ist der durchschnittliche Overhead der Virtualisierung gering.
+\begin{figure}[h!]
+\includegraphics[height=.56\textwidth]{vsphereClient.png}
+\caption{Oberfläche \texttt{vSphere Client}}
+\label{vSpherePic}
+\end{figure}
+
+\section{Netzwerk}
+  Im Rahmen der Projektvorbereitung wurde im Einvernehmen mit der IT-Abteilung des Unternehmens festgelegt, dass das Datenlabor über seinen eigenen \acs{IP}-Bereich innerhalb des internen DBFZ-Netzes verfügen soll.
+  Von der IT-Abteilung wurde der IP-Bereich \texttt{172.18.9.0/24} für das Datenlabor reserviert.
+  Es ist zu erwarten, dass die verfügbaren 254 Adressen auf längere Sicht für die Entwicklung und Produktion der Datenprodukte des Datenlabors ausreichen werden.
+  Der Bereich ist nicht nur für die Entwicklungsumgebung an sich vorgesehen,
+  er soll auch den Platz für in Produktion befindliche Datenprodukte bereitstellen,
+  die zum Teil über das Internet auch von außerhalb des DBFZ-Netzes zugreifbar sein sollen.
+  In Absprache mit dem Datenlabor hat die IT-Abteilung den IP-Bereich konfiguriert und zur Nutzung übergeben.
+  Um die Zugangsrechte zu einzelnen Maschinen vorzugeben wurde das \texttt{/24}-Subnetz weiter nach Zugriffsregeln unterteilt:
+  für \texttt{172.18.9.0/26} und \texttt{172.18.9.64/27} wurde der Zugang aus dem Internet zugelassen,
+  für \texttt{172.18.9.96/27} nur der DBFZ-Interne Zugang inklusive \acs{VPN} (für DBFZ-Mitarbeiter im Homeoffice),
+  für \texttt{172.18.9.128/27} nur der DBFZ-Interne Zugang exklusive VPN.
+  Die restlichen Adressen sind nur von innerhalb des \texttt{/24}-Subnetzes ansprechbar.
+  Damit sind die Zugriffsmöglichkeiten bei aufsteigender IP immer stärker eingeschränkt.
+
+% \begin{table}
+\begin{table}[h!]
+  \centering
+  \caption{Zugriffsrechte für \texttt{172.18.9.0/24}}
+  \begin{tabular}{rl}
+
+    \toprule
+    IP-Bereich: & Zugriff von: \\
+    \midrule
+    \texttt{172.18.9.0\ \ /26}    & \multirow{2}{*}{$\Biggr \}$ Internet}\\
+    \texttt{172.18.9.64\ /27}   & \\
+    \texttt{172.18.9.96\ /27}   & DBFZ-Intern (incl. VPN) \\
+    \texttt{172.18.9.128/27}  & DBFZ-Intern  \\
+    % \texttt{172.18.9.160/25}  & Innerhalb \texttt{172.18.9.0/24}\\
+    \texttt{172.18.9.160/27}    & \multirow{2}{*}{$\Biggr \}$ \texttt{172.18.9.0/24}}\\
+    \texttt{172.18.9.192/26}   & \\
+    \bottomrule
+  \end{tabular}
+    
+\end{table}
+
+\section{Verteilung der VMs} \label{ipbereich}
+Während der Planung wurde als Konvention festgelegt, dass sämtliche virtuellen Maschinen des Datenlabors je nach Typ eine bestimmte IP-Adresse innerhalb eines bestimmten Bereichs des \texttt{/24}-Subnetzes zugeteilt werden.
+
+\begin{table}[h!]
+  \centering
+  \caption{Konventionen: VMs in \texttt{172.18.9.0/24}}
+  \begin{tabular}{rl}
+
+    \toprule
+    IP-Bereich: & Zugriff von: \\
+    \midrule
+    \texttt{172.18.9.0\ \ /27}    & \multirow{2}{*}{$\Biggr \}$ Apps in Produktion}\\
+    \texttt{172.18.9.32\ /28}   & \\
+    \texttt{172.18.9.48\ /28}   & \multirow{2}{*}{$\Biggr \}$ Weitere öffentliche VMs}\\
+    \texttt{172.18.9.64\ /27}  &  \\
+    \texttt{172.18.9.96\ /27}  &  Weitere interne VMs \\
+    \texttt{172.18.9.128/26}  &  Apps in Development \\
+    \texttt{172.18.9.192/26}  & System-VMs \\
+    \bottomrule
+  \end{tabular}
+    
+\end{table}
+
+Für die Softwareentwicklung bietet sich damit an, im Bereich \texttt{172.18.9.96/27} (Weitere interne VMs / Zugriff von DBFZ-Intern + VPN) die Programmierinfrastruktur anzusiedeln.

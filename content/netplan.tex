@@ -1,0 +1,18 @@
+\begin{lstlisting}[caption=\texttt{netplan}-Konfigurationsdatei, label=netplanlisting, language=bash]
+ffroehlich@dlab-develop01:~$ cat /etc/netplan/00-installer-config.yaml
+# This is the network config written by 'subiquity'
+network:
+  ethernets:
+    ens160:
+      addresses:
+      - 172.18.9.97/24
+      routes:
+        - to: default
+          via: 172.18.9.254
+      nameservers:
+        addresses:
+        - 172.28.0.1
+        - 172.28.0.2
+        search: []
+  version: 2
+\end{lstlisting}

@@ -1,0 +1,32 @@
+%!TEX root = ../dokumentation.tex
+
+\chapter{Theorie der Virtualisierung}
+In einem sehr allgemeinen Sinn kann jede Abstraktionsebene einer Computerhardware als eine \textit{virtuelle Maschine} bezeichnet werden.\cite[3]{tanenbaum2016structured}
+Im allgemein üblichen Sprachgebrauch meint \textit{virtuelle Maschine} aber die explizite Virtualisierung eines Computersystems mittels eines \textit{Hypervisors.}
+Ein \textit{Hypervisor} ist dabei eine Software, die (ähnlich dem Kernel eines Betriebssystems) virtuelle Maschinen erzeugt und verwaltet. Er vermittelt für die virtuelle Maschine die Zurverfügungstellung von \acs{CPU}-Ressourcen, Speicherzugriff und \acs{I/O} \cite[457]{tanenbaum2016structured}.
+Für die virtuelle Maschine und die auf ihr laufenden Programme soll es dabei unerheblich sein, ob sie nun virtualisiert sind oder auf direkter Hardware \textit{(bare-metal)} laufen. 
+
+\section{Emulation, Hypervisor, Container}
+Ein Hypervisor unterscheidet sich von reiner \textit{Emulation} dadurch, dass bei der Emulation tatsächlich die gesamte Hardware (bis hin zu eventuell vorhandenen Fehlern) in einer Weise abstrahiert wird, dass das Gastsystem das exakt gleiche Verhalten des Emulators erhält, das er auch auf der emulierten Hardware erhalten hätte \cite{emulationorvirtualizationdell}.
+Ein Hypervisor kann dagegen bestimmte Hardwarerufe gleichsam \glqq durchreichen\grqq{}, ohne tatsächlich die Arbeit einer kompletten Hardwareabstraktion in jeder Einzelheit vornehmen zu müssen.
+Ein Hauptzweck von Emulation ist die Bewahrung der Computergeschichte; so kann etwa jegliche Software des schon lange nicht mehr produzierten \textit{Commodore 64}-Systems weiterhin genutzt werden, ohne auf die tatsächliche Hardware angewiesen zu sein -- und dies, obwohl der größte Teil der Software direkt in 6502/6510-Assembler geschrieben wurde.
+
+Das egenteilige Extremum zur Emulation ist die \textit{Containervirtualisierung}. Hier findet gar keine Hardwareabstraktion im eigentlichen Sinne statt.
+Das Gast-\glqq System\grqq{} ist kein vollständiges Betriebssystem mit Kernel und Userspace, sondern de facto nur ein abgeschlossener Bereich im Userspace des Hostsystems.
+Ein Container hat Zugriff auf den Kernel des Hosts, aber nicht auf Bereiche, die von ihm durch die Virtualisierungssoftware abgekapselt werden -- wie zum Beispiel andere Container auf demselben Betriebssystem.
+Mit diesen kann der Container aber über ein virtuelles Netzwerk kommunizieren.
+Der Hauptvorteil gegenüber einer klassischen Hypervisorvirtualisierung ist, dass auf dem Gastsystem kein eigener Kernel arbeitet und die Programmausführung -- zumindest in der Theorie -- performanter ist \cite{dockerwhatis}.
+Die Verwendungsbereiche der Containervirtualisierung unterscheiden sich nur gering von jenen einer Hypervisorvirtualisierung.
+Die Technologie der Containervirtualisierung ist als Industriestandard jünger, hat sich aber im vergangenen Jahrzehnt schnell in vielen Bereichen durchgesetzt, in denen zuvor auf klassische Virtualisierung gesetzt wurde.
+Theoretisch kann jede Virtualisierungslösung, die nicht auf ein \glqq vollständiges\grqq{} Betriebssystem angewiesen ist, mit Containern umgesetzt werden.
+Für die im Datenlabor angestrebte Lösung wurde jedoch ein Hypervisor-Ansatz gewählt, nicht zuletzt um ein Höchstmaß an Flexibilität zu gewährleisten.
+
+\section{Hypervisortypen} \label{hypervisortypen}
+Hypervisoren werden in zwei Typen unterschieden, die zur Zeit beide in der Infrastruktur des Datenlabors im Einsatz sind.
+Ein \textit{Typ-2-Hypervisor} kann als normales Programm auf einem üblichen Betriebssystem verstanden werden.
+Er lässt sich auf die betriebssystemtypische Art installieren und läuft neben anderen Programmen und Prozessen \cite[71-72]{tanenbaum2015os}.
+Beispiele für Typ-2-Hypervisoren sind \texttt{VirtualBox, VMware Workstation} und \texttt{Proxmox,} wobei letzteres bislang vom Datenlabor eingesetzt wurde, um seine Apps zu hosten. Diese Lösung wird im Rahmen dieses Projekts ersetzt.
+
+,Ein \textit{Typ-1-Hypervisor} wird stattdessen direkt \textit{(bare-metal)} auf der Hardwareinfrastruktur installiert, wie ein Betriebssystem \cite[70-71]{tanenbaum2015os}.
+Der Vorteil hierbei ist, dass kein komplettes Hostbetriebssystem unter und neben den Gastsystemen laufen muss -- der schlanke Kernel des Hypervisors kann auf höchstmögliche Performanz optimiert werden.
+Ein Beispiel für einen Typ-1-Hypervisor ist das in diesem Projekt verwendete \texttt{VMware ESXi} (als Komplettlösung auch \texttt{vSphere} genannt).

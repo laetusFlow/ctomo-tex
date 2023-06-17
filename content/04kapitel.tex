@@ -1,0 +1,119 @@
+%!TEX root = ../dokumentation.tex
+
+\newpage{}
+\chapter{Die Entwicklungsmaschine}
+Die eingeführte Virtualisierunginfrastruktur soll zwei unterschiedliche, aber eng verzahnte Aufgaben erfüllen.
+Sie soll einerseits die im Datenlabor entwickelten Apps und Datenbanken hosten, soll aber auch die \textit{Programmierinfrastruktur} für diese Anwendungen selbst bereitstellen.
+Während der Planungsphase wurde eruiert, wie genau diese Infrastruktur aufgebaut sein soll.
+Dabei wurden zwei Möglichkeiten näher in Betracht genommen.
+
+\section{Möglichkeit: Eine VM pro Teammitglied}
+Dieser Ansatz mag zunächst natürlich erscheinen -- hat doch jedes Mitglied des Datenlabors auch bislang seinen eigenen Clientrechner, mit dem es auf \texttt{Git}-Repositories zugreift und programmiert.
+Die Vorteile wären, dass die jeweilige Entwickler\ggin ihr System frei ihrem Bedarf anpassen könnte, selbst Software und Pakete installieren kann.
+Bei dieser Lösung hätte jedes Mitglied \texttt{sudo}-Rechte auf seiner eigenen Maschine.
+Tatsächlich wurde diese Möglichkeit getestet, es wurde probeweise eine VM mit graphischen Ubuntu installiert und vorkonfiguriert.
+Ein \texttt{xrdp}-Server auf der jeweiligen VM ermöglichte eine ausreichend performante Remote-Desktop-Verknüpfung über den auf Windows-Endrechnern vorinstallieren \texttt{\acs{RDP}}-Client \texttt{(mstsc.exe)}.
+
+Diese Option wurde insbesondere in Betracht gezogen, da nicht jedes Mitglied des Datenlabors über ausgiebige Erfahrung im Umgang mit Linux verfügt.
+Das Zurverfügungstellen einer graphischen Oberfläche hätte hier gewisse Schwierigkeiten bei der Umstellung der Arbeitsabläufe erleichtern können.
+So kann beispielsweise schon eine einfache Dateioperation wie Kopieren oder Verschieben für Ungeübte in einer (Linux-)Kommandozeile eine besondere Herausforderung darstellen. Die bei einem Desktop-Linux mitgelieferten, für Windows- und Mac-Benutzer intuitiven graphischen Programme bieten hier eine zugängliche Alternative.
+
+Allerdings bringt diese Option auch eindeutige Nachteile mit sich.
+Auch wenn der VMware-Cluster des Datenlabors gut ausgestattet ist, bedeutet das Bereitstellen vieler graphischer Systeme eine entsprechende Last.
+Auch sind die zur Zeit für das Datenlabor verfügbaren IP-Adressen endlich.
+Nicht zuletzt, da davon ausgegangen wird, dass das Datenlabor noch weiter wachsen wird, wurde diese Variante verworfen und stattdessen eine einzige virtuelle Development-Maschine für alle Entwickler\gginnen eingerichtet.
+
+
+\section{Möglichkeit: Eine einzige VM für das ganze Team}
+Statt jedem Teammitglied eine eigene VM zu überlassen, wurde entschieden, eine einzige VM für das ganze Team mit dem \textit{hostname} \texttt{dlab-develop01} einzurichten. Hierfür wurde die Distribution \texttt{Ubuntu Server} gewählt -- ein System ohne graphischen Desktop.
+Hier wird für jede Entwickler\ggpin ein eigener Benutzeraccount eingerichtet.
+Um einen einfachen, grafischen Zugang zum Dateisystem zu ermöglichen, wurde eine andere Lösung gewählt, siehe unten Kap. \ref{VSCoderemote}.
+
+Linux ist als UNIX-System problemlos in der Lage, mehrere Benutzer gleichzeitig auf sich zugreifen zu lassen. In gewisser Weise gleicht dieser Ansatz dem historischen \textit{time-sharing}-Modell, einem großen Entwicklungsschritt der Computergeschichte ab Ende der 60er Jahre des vergangenen Jahrhunderts.
+Mit \textit{time-sharing} konnten viele Benutzer\ggpinnen gleichzeitig über physische Terminals auf einen einzigen Computer zugreifen, statt wie bisher Programme theoretisch zu erdenken, in Lochkarten zu stanzen und auf baldige, fehlerlose Ausführung zu hoffen.
+UNIX war zwar nicht das erste \textit{time-sharing}-Betriebssystem, aber die Entwicklung dieses Modells ist integraler Teil seiner frühen Entwicklungsgeschichte  \cite[30-31]{KernighanUnixHistory2020}.
+Die Verbindung zu \texttt{dlab-develop01} findet freilich nicht mehr über ein \textit{dumb terminal} statt, sondern über das Netzwerk via \texttt{SSH.}
+
+Als Distribution für \texttt{dlab-develop01} wurde \texttt{Ubuntu Server 2204} gewählt, das als \acs{LTS}-Version auf lange Serviceupdates hoffen darf.
+Ubuntu dürfte sicher die bekannteste Linux-Distribution im Endbenutzersektor sein, hat aber auch im Serverbereich mittlerweile einen festen Stand gegenüber seiner Grundlage Debian gefunden.
+Die Entscheidung für Ubuntu hatte vor allem mit der (im Vergleich zu Debian höheren) Aktualität der Softwarepakete zu tun.
+Langfristig ist geplant, auch Pythonpakete nicht mehr über den von \texttt{\acs{pip}} standardmäßig verwendeten Weg von über die Server von \texttt{\acs{pypi}} zu installieren, sondern hierfür die von Ubuntu bereitgestellten Pakete zu nutzen.
+Hierbei besteht die Hoffnung, dass die Pakete dort einer stärkeren Sicherheitskontrolle unterworfen sind und sich dadurch das Risiko einer \textit{supply chain attack} mindern lässt.
+
+\section{Einrichtung der Entwicklungsmaschine}
+Die Serverversion von Ubuntu muss für den Softwareentwicklungseinsatz nur gering angepasst werden.
+Um eine Einheitlichkeit im Installationsweg von Software sicherzustellen, wurde \texttt{snap} -- eine von der Mutterfirma von Ubuntu bereitgestellte containerisierte Installationsmethode -- deinstalliert.
+Die \texttt{man}-Seiten, die zu Linuxbefehlen die hilfreiche Dokumentation bieten, mussten nachinstalliert werden.
+Nach dem Hinzufügen der Teammitglieder via: 
+\begin{verbatim}
+# useradd -m <username>
+\end{verbatim}
+\dots können die neuen Benutzer am Ende der \texttt{/etc/passwd}-Datei eingesehen werden:
+\input{content/passwdlisting.tex}
+Es ist beim Ansatz Viele-User-Eine-VM ein entscheidender Punkt, dass die meisten Entwickler\ggpinnen hier keine \texttt{sudo}-Rechte besitzen.
+Eine unbedachte Eingabe könnte die ganze Maschine lahmlegen -- und damit auf längere Zeit die Entwicklungsarbeit des Teams.
+Stattdessen ist vorgesehen, dass nur die Teamleitung und eine dafür qualifizierte \mbox{Entwickler\ggpin} \texttt{sudo}-Rechte erhält. Letztere ist auch insgesamt für die Verwaltung des VMware-Clusters an sich sowie für den Einsatz von \acs{CI/CD} zuständig.
+Spätestens sobald Programmierbibliotheken über das Ubuntu-eigene Paketmanagement (und nicht mehr über \texttt{pip}/\texttt{pypi}) installiert werden, ist mit einem deutlichen Mehraufwand für diese Stelle zu rechnen. Zur Zeit finden daher Planungen statt, geprüfte Programmierbibliotheken auf einem eigenen Server für das Team vorzuhalten.
+
+Es wurde entschieden, der VM die IP-Adresse \texttt{172.18.9.97} zuzuweisen (siehe Kap. \ref{ipbereich}).
+Das Setzen einer IP-Adresse unter Ubuntu unterscheidet sich von der auf Debiansystemen üblichen Variante.
+Statt die Adresse in \texttt{/etc/network/interfaces} einzutragen konfiguriert man das Programm \texttt{netplan} \cite{netplan}.
+Hierzu ist eine \texttt{.yaml}-Datei in \texttt{/etc/netplan/} zu plazieren:
+\\
+\input{content/netplan.tex}
+Diese Konfiguration lässt sich aktivieren durch:
+\begin{verbatim}
+# netplan generate
+# netplan apply
+\end{verbatim}
+Danach ist die IP-Adresse gesetzt und die Benutzer\gginnen können sich verbinden.
+
+\section{Clientzugriff auf die Entwicklungsmaschine}
+\texttt{SSH} ist die grundsätzliche Technologie, mit der die Verknüpfung mit der Entwicklungsmaschine ermöglicht wird.
+Hiermit wird ein Remote-Login auf einem Fremdrechner ermöglicht.
+Der Unterschied zum älteren \texttt{telnet} liegt darin, dass die Verbindung verschlüsselt stattfindet und etwa das Abgreifen von Zugangsdaten via \textit{package sniffing} nicht möglich ist.
+Authentifizierung auf Fremdsystem kann klassisch mit Benutzername und Passwort erfolgen, oder durch Hinterlegen eines Schlüsselpaares.
+Das Aufrechterhalten einer verschlüsselten Verbindung kann auch durch dritte Anwendungen genutzt werden (\texttt{ssh}\textit{-tunneling}) \cite[608-611]{PetersonNetze}.
+Im Gegensatz zu den meisten Linux-Distributionen ist Windows nicht von Haus aus mit \texttt{SSH} ausgestattet.
+Um mit jenen  Windows-Endrechnern \texttt{SSH} zu verwenden, mit denen im Datenlabor gearbeitet wird, sollte zunächst \texttt{Git for Windows} installiert werden.
+Bei der Installation wird sowohl ein \texttt{SSH}-Server wie auch die \texttt{git bash} installiert, einer Windows-Emulation der weitverbreiteten Unix-Shell \texttt{bash}.
+Mit ihr erzeugt man ein \texttt{SSH}-Schlüsselpaar durch:
+\begin{verbatim}
+$ ssh-keygen -t ed25519 -C "<USERNAME>@dbfz.de"
+\end{verbatim}
+Mit \texttt{ssh-copy-id} kann man den öffentlichen Schlüssel bequem an die Remotemaschine schicken:
+\begin{verbatim}
+$ ssh-copy-id -i /u/.ssh/id_ed25519.pub <USERNAME>@dlab-develop01
+\end{verbatim}
+Mit \texttt{ssh <USERNAME>@dlab-develop01} ist hierdurch ein komfortables Anmelden an der Entwicklungsmaschine ohne Passworteingabe möglich.
+\\
+\input{content/prompt.tex}
+
+\section{Visual Studio Code als IDE im Datenlabor} \label{VSCoderemote}
+Es ist mit jeder modernen \acs{IDE} möglich, remote via \texttt{SSH} Software zu entwickeln.
+Hierzu ist es prinzipiell nur nötig, das fremde Dateisystem mit \texttt{SSHFS} lokal einzubinden.
+Allerdings kann insbesondere in der Webentwicklung ein erhöhter Konfigurationsaufwand entstehen.
+Wer gewöhnt ist, die aktuell bearbeitete Webseite/App auf \texttt{localhost} im Browser zu betrachten, wird beim Remoteentwickeln auf Probleme stoßen.
+
+Im Datenlabor gibt es keine Vorgaben, welche Entwicklungsumgebung verwendet wird. Verbreitet sind \texttt{Pyzo}, \texttt{PyCharm} und \texttt{JupyterLab} für Python sowie \texttt{Visual Studio Code} (VSCode) für \texttt{node.js} und wohl alle anderen Sprachen.
+Im Rahmen der Einrichtung der Entwicklungsmaschine wurde entschieden, zwar weiterhin den Entwickler\gginnen freie Wahl im Bezug auf ihre gewünschte IDE zu lassen, jedoch den Zugriff auf \texttt{dlab-develop01} nur mit \texttt{Visual Studio Code} zu dokumentieren und zu supporten. 
+
+VSCode ist eine relativ junge IDE.
+Sie ist nicht zu verwechseln mit dem seit Jahrzehnten verkauften proprietären \texttt{Visual Studio}, es handelt sich um eine Neuentwicklung.
+Es ist komplett \textit{open source} \cite{vscodegithub} und interessanterweise in \texttt{node.js} geschrieben.
+In gewisser Weise kann es als Nachfolger des zeitweise beliebten \texttt{Atom}-Editors der Firma GitHub angesehen werden.
+Der große Verbreitung, die VSCode innerhalb weniger Jahre erlangt hat liegt wohl in seiner Vielseitigkeit und einfachen Bedienbarkeit. Während andere IDEs meist ihren Fokus auf eine einzige Programmiersprache setzten, kann mit VSCode mittels eines ganzen Plugin-Universums quasi jede existierende und genutzte Programmiersprache unterstützen \cite{brainfuck}.
+
+Die Entscheidung, sich auf VSCode zu konzentrieren entsprang nicht nur der großen Auswahl an unterstützten Programmiersprachen, sondern lag insbesondere an einem Plugin: \texttt{Remote - SSH} \cite{remotessh}.
+Dies übernimmt de facto alle Konfigurationsaufgaben, die bei andern IDEs von Hand vorgenommen werden mussten.
+Besonders komfortabel ist, das beim Starten einer Webapp auf einer Remotemaschine automatisch der entsprechende Port weitergeleitet wird.
+So kann problemlos auf dem Endrechner wie gewohnt über \texttt{localhost} auf die Seite zugegriffen werden und der Programmierfortschritt überprüft werden.
+\\
+\begin{figure}[h!]
+\includegraphics[height=.53\textwidth]{remoteSSHmenu.PNG}
+\caption{Oberfläche \texttt{Visual Studio Code} mit Plugin \texttt{Remote - SSH}}
+\label{remotesshpic}
+\end{figure}
+
+Nach der Installation über den \texttt{Visual Studio Code Marketplace} genügt ein Knopfdruck, um eine \texttt{SHH}-Verbindung zu einem Server aufzubauen, bei dem der öffentliche Schlüssel hinterlegt wurde.
+Sobald der Login erfolgt ist, entsteht beim Programmieren der Eindruck, als wäre das bearbeitete Projekt auf dem eigenen Endrechner.
