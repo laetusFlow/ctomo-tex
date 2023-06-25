@@ -29,7 +29,8 @@
 % Einstellungen laden
 \usepackage{xstring}
 \usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
+\usepackage[LGR, T1]{fontenc}
+\newcommand{\textgreek}[1]{\begingroup\fontencoding{LGR}\selectfont#1\endgroup}
 
 \newcommand{\einstellung}[1]{%
   \expandafter\newcommand\csname #1\endcsname{}
@@ -81,6 +82,8 @@
 \usepackage{ngerman} % für gendergap
 \usepackage{etoolbox} % für verbatims whitespace reduction
 \usepackage{braket} % Quantum-stuff
+
+\DeclareMathOperator{\Span}{span}
 
 %%%  % für verbatims whitespace reduction
 \makeatletter
