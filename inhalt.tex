@@ -55,11 +55,11 @@ Dieses Gleichungssystem ist allerdings derart groß und zudem überbestimmt, das
 
 \section{Konjugierte Gradienten}
 So wird in der Praxis ein iteratives Verfahren eingesetzt werden.
-Hier betrachtet wird das \textit{Conjugate Gradient for Least Squares}-Verfahren (manchmal in der Literatur auch \textit{Conjugate Gradient Normal equation Residual (CGNR)} genannt),
+Hier betrachtet wird das \textit{Conjugate Gradient for Least Squares}-Verfahren (manchmal in der Literatur auch \textit{Conjugate Gradient Normal equation Residual (CGNR)} genannt \cite{Golub}),
 eine Unterform des \textit{Conjugate Gradient}-Verfahrens.
 Dieses wurde erstmals 1952 von Hestenes und Stiefel vorgestellt \cite{Hestenes1952} und seinerzeit auf dem sehr primitiven, röhrenbasierten \textit{IBM Card-Programmed Electronic Calculator} \cite{ibm603} getestet.
 
-Es kann oberflächlich als Abwandlung des Verfahrens des steilsten Abstiegs (\textit{gradient descent} bzw \textit{Gradientenverfahren} ) verstanden werden -- beiden gemein ist, dass sie das Gleichungssystem als Extremwertverfahren lösen.
+Es kann oberflächlich als Abwandlung des Verfahrens des steilsten Abstiegs (\textit{gradient descent} bzw \textit{Gradientenverfahren}) verstanden werden -- beiden gemein ist, dass sie das Gleichungssystem als Extremwertverfahren lösen.
 So löst das CGLS das Gleichungssystem mit symmetrischer und positiv definiter $M$:
 \begin{equation}
 Mu=g, \quad M \in \mathbb{R}^{\tilde{n},\tilde{n}}, \quad g \in \mathbb{R}^{\tilde{n}}
@@ -71,9 +71,31 @@ indem es das Minimum der Funktion $ \| g - Mu \|^2 $ bestimmt -- nicht jedoch im
 \end{equation}
 dem verschobenen $k$-ten Krylov-Raum bzgl. $M$ und $g$.
 
+Angewandt auf unser Problem ist:
+\begin{equation}
+\begin{split}
+M &= A^TA \\
+g&=A^Tb \\
+\tilde{n} &= n^2.
+\end{split}
+\end{equation}
+
+Die $k$-te Iterierte des Verfahrens liegt dann im verschobenen Krylov-Raum
+\begin{equation}
+\begin{split}
+    u^{(k)}  &\in u^{(0)} + \mathcal{K}_k(A^TA,A^Tr^{(0)}) \\
+    &= u^{(0)}+ \Span \left\{\ A^Tr^{(0)} , (A^TA)A^Tr^(0) , \ \dots \ , (A^TA)^{k-1} A^Tr^{(0)} \ \right\},
+\end{split}
+\end{equation}
+
+mit $r^{(o)} = b - Au^{(0)}$ als Anfangsresiduum.
+Unter allen Elementen $u$ dieses Raumes minimiert $u^{(k)} $ die Residuennorm $ \Vert b - Au \Vert  $.
+
+Es wird sich zeigen, dass $u$ bereits nach sehr wenigen Iterationen mit minimalen Speicheraufwand ein ansehliches Ergebnis liefert.
 
 \chapter{Programm}
-Das Programm in einem Jupyter-Notebook als Pythoncode gegeben. Zur Vereinfachung der Berechnungen wurde die übliche Bibliothek \texttt{numpy} \cite{NumPy} verwendet, zur einachen Visualisierung \texttt{matplotlib} \cite{Matplotlib}.
+Das Programm in einem Jupyter-Notebook als Pythoncode gegeben. Zur Vereinfachung der Berechnungen wurde die übliche Bibliothek \texttt{numpy} \cite{NumPy} verwendet, zur einfachen Visualisierung \texttt{matplotlib} \cite{Matplotlib}.
+In der Umsetzung wurde sich am in \cite{Hochbruck2002} gegebenen Algorithmus des CGLS-Verfahrens orientiert.
 
 
 % % \section{Quantencomputing als Konzept}
